@@ -5,19 +5,6 @@
 
 DECLARE_CYCLE_STAT(TEXT("Char PhysWalking"), STAT_CharPhysCustom, STATGROUP_Character);
 
-UJonyWalk_5_7MovementComponent::UJonyWalk_5_7MovementComponent()
-{
-	bOrientRotationToMovement = true;
-	RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-	JumpZVelocity = 500.f;
-	AirControl = 0.35f;
-	MaxWalkSpeed = 500.f;
-	MinAnalogWalkSpeed = 20.f;
-	BrakingDecelerationWalking = 2000.f;
-	BrakingDecelerationFalling = 1500.0f;
-	MaxCustomMovementSpeed = MaxSkatingSpeed*2.0f;
-}
-
 void UJonyWalk_5_7MovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
 	Super::PhysCustom(DeltaTime, Iterations);
@@ -37,36 +24,6 @@ void UJonyWalk_5_7MovementComponent::PhysRailSlide(float DeltaTime, int32 Iterat
 bool UJonyWalk_5_7MovementComponent::IsMovingOnGround() const
 {
 	return ((MovementMode == MOVE_Walking) || (MovementMode == MOVE_NavWalking) || (MovementMode == MOVE_Custom)) && UpdatedComponent;
-}
-
-void UJonyWalk_5_7MovementComponent::SetMovementMode(EMovementMode NewMovementMode, uint8 NewCustomMode)
-{
-	if (MovementMode == MOVE_Falling && (OldMovementMode == MOVE_Custom || OldMovementMode == MOVE_Custom)) NewMovementMode = MOVE_Custom;
-	if (MovementMode == MOVE_Walking || MovementMode == MOVE_Custom) OldMovementMode = MovementMode;
-	if (NewMovementMode == MOVE_Walking || NewMovementMode == MOVE_Custom) {
-		if (NewMovementMode == MOVE_Custom) {
-			bOrientRotationToMovement = false;
-			AirControl = 0.0f;
-			GroundFriction = 0.0f;
-			bImpartBaseVelocityX = true;
-			bImpartBaseVelocityY = true;
-			bImpartBaseVelocityZ = true;
-			bImpartBaseAngularVelocity = true;
-		}
-		else
-		{
-			bOrientRotationToMovement = true;
-			RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-			JumpZVelocity = 500.f;
-			AirControl = 0.35f;
-			MaxWalkSpeed = 500.f;
-			MinAnalogWalkSpeed = 20.f;
-			BrakingDecelerationWalking = 2000.f;
-			BrakingDecelerationFalling = 1500.0f;
-		}
-	}
-	Super::SetMovementMode(NewMovementMode, NewCustomMode);
-	SetGroundMovementMode(NewMovementMode);
 }
 
 void UJonyWalk_5_7MovementComponent::DoMovement(float DeltaTime, FVector2D MovementVector)

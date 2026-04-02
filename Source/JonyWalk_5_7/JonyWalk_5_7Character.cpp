@@ -4,7 +4,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "JonyWalk_5_7MovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
@@ -47,6 +47,7 @@ void AJonyWalk_5_7Character::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
+		EnhancedInputComponent->BindAction(MoveModeAction, ETriggerEvent::Triggered, this, &AJonyWalk_5_7Character::SwitchMovementMode);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AJonyWalk_5_7Character::Move);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AJonyWalk_5_7Character::Look);
 
@@ -62,78 +63,8 @@ void AJonyWalk_5_7Character::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 void AJonyWalk_5_7Character::Tick(float DeltaTime)
 {
-	if (GetController() != nullptr)
-	{
-		FVector CurrentVelocity = GetCharacterMovement()->Velocity;
-		//Rotation
-		if (!CurrentVelocity.IsNearlyZero() && MovementVector.X > 0.5 || MovementVector.X < -0.5)
-		{
-			FRotator CurrentRotation = GetActorRotation();
-			FRotator TargetRotation = (GetActorRightVector() * MovementVector.X).Rotation(); // Your target based on input
-
-			// Smoothly interpolate
-			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.0f);
-			SetActorRotation(NewRotation);
-
-			FVector2D Direction2D(GetActorForwardVector());
-			float currentVelocityZ = CurrentVelocity.Z;
-			FVector2D Velocity2D(CurrentVelocity);
-			Direction2D = Direction2D * FMath::Sign(Direction2D.Dot(Velocity2D));
-			float Speed2D = Velocity2D.Size();
-			CurrentVelocity = CurrentVelocity.GetSafeNormal() * FVector((Direction2D * Speed2D).X, (Direction2D * Speed2D).Y, currentVelocityZ).Size();
-			GetCharacterMovement()->Velocity = FVector((Direction2D*Speed2D).X, (Direction2D * Speed2D).Y, currentVelocityZ);
-		}
-
-		//Acceleration
-		if (MovementVector.Y > 0.5)
-		{
-			// find out which way is forward
-			const FRotator Rotation = GetActorRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-			// get forward vector
-			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-			// get right vector 
-			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-			// add movement
-			AddMovementInput(ForwardDirection, MovementVector.Y);
-		}
-
-		//Deceleration (Drag and Break)
-		CurrentVelocity = GetCharacterMovement()->Velocity;
-		float speedReduction = Drag + (MovementVector.Y < -0.5 ? Break : 0.0f);
-		CurrentVelocity -= CurrentVelocity.GetSafeNormal() * speedReduction * DeltaTime;
-		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToSize(0.0f, GetCharacterMovement()->MaxWalkSpeed);
-
-		//Slope
-		CurrentVelocity = GetCharacterMovement()->Velocity;
-		if (GetCharacterMovement()->IsMovingOnGround()) {
-			// Access the current floor result directly
-			FFindFloorResult CurrentFloor = GetCharacterMovement()->CurrentFloor;
-
-			// Get the surface normal (ground normal)
-			FVector GroundNormal = CurrentFloor.HitResult.ImpactNormal;
-			//Only apply if the slope is consistent. Missing some frames won't matter.
-			if (PreviousGroundNormal.Dot(GroundNormal) > 0.9f)
-			{
-				float InclineFraction = 1.0f - GetActorUpVector().Dot(GroundNormal);
-				FVector ProjectedForward = FVector::VectorPlaneProject(GetActorForwardVector(), GroundNormal);
-
-				//Apply partial gravity along projected forward
-				FVector GravityAlongSlope = FMath::Sign(ProjectedForward.Z) * ProjectedForward.GetSafeNormal() * GetCharacterMovement()->GetGravityZ() * InclineFraction * DeltaTime;
-				CurrentVelocity += GravityAlongSlope;
-				GetCharacterMovement()->Velocity = CurrentVelocity;
-				//TODO: Calculate backward vector on ground plane and apply dot product gravity along it. 
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GravityAlongSlope.ToString());
-			}
-			PreviousGroundNormal = GroundNormal;
-		}
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GetCharacterMovement()->Velocity.ToString());
-		MovementVector = FVector2D::ZeroVector;
-	}
+	Cast< UJonyWalk_5_7MovementComponent>(GetCharacterMovement())->DoMovement(DeltaTime, MovementVector);
+	MovementVector = FVector2D::ZeroVector;
 }
 
 void AJonyWalk_5_7Character::Move(const FInputActionValue& Value)
@@ -151,9 +82,27 @@ void AJonyWalk_5_7Character::Look(const FInputActionValue& Value)
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void AJonyWalk_5_7Character::DoMove(float Right, float Forward)
+void AJonyWalk_5_7Character::Move(float Right, float Forward)
 {
+	// input is a Vector2D
+	MovementVector = FVector2D(Right, Forward);
+}
 
+void AJonyWalk_5_7Character::SwitchMovementMode()
+{
+	switch (GetCharacterMovement()->MovementMode)
+	{
+	case MOVE_Custom: {
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		break;
+	}
+	case MOVE_Walking: {
+		GetCharacterMovement()->SetMovementMode(MOVE_Custom);
+		break;
+	}
+	default:
+		break;
+	}
 }
 
 void AJonyWalk_5_7Character::DoLook(float Yaw, float Pitch)

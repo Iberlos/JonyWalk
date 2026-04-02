@@ -38,6 +38,10 @@ protected:
 	UInputAction* JumpAction;
 
 	/** Move Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MoveModeAction;
+
+	/** Move Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;
 
@@ -63,15 +67,16 @@ protected:
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
+	/** For Mobile Blueprint */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void Move(float Right, float Forward);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
 public:
 
-	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
+	void SwitchMovementMode();
 
 	/** Handles look inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -86,9 +91,6 @@ public:
 	virtual void DoJumpEnd();
 
 	FVector2D MovementVector = FVector2D::ZeroVector;
-	float Drag = 10.0f;
-	float Break = 600.0f;
-	FVector PreviousGroundNormal = FVector::ZeroVector;
 
 public:
 
