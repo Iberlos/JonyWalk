@@ -64,9 +64,8 @@ void AJonyWalk_5_7Character::Tick(float DeltaTime)
 {
 	if (GetController() != nullptr)
 	{
-		FVector CurrentVelocity = GetCharacterMovement()->Velocity;
 		//Rotation
-		if (!CurrentVelocity.IsNearlyZero() && MovementVector.X > 0.5 || MovementVector.X < -0.5)
+		if (!GetCharacterMovement()->Velocity.IsNearlyZero() && MovementVector.X > 0.5 || MovementVector.X < -0.5)
 		{
 			FRotator CurrentRotation = GetActorRotation();
 			FRotator TargetRotation = (GetActorRightVector() * MovementVector.X).Rotation(); // Your target based on input
@@ -75,13 +74,11 @@ void AJonyWalk_5_7Character::Tick(float DeltaTime)
 			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.0f);
 			SetActorRotation(NewRotation);
 
-			FVector2D Direction2D(GetActorForwardVector());
-			float currentVelocityZ = CurrentVelocity.Z;
-			FVector2D Velocity2D(CurrentVelocity);
-			Direction2D = Direction2D * FMath::Sign(Direction2D.Dot(Velocity2D));
+			FVector2D Forward2D(GetActorForwardVector());
+			float currentVelocityZ = GetCharacterMovement()->Velocity.Z;
+			FVector2D Velocity2D(GetCharacterMovement()->Velocity);
 			float Speed2D = Velocity2D.Size();
-			CurrentVelocity = CurrentVelocity.GetSafeNormal() * FVector((Direction2D * Speed2D).X, (Direction2D * Speed2D).Y, currentVelocityZ).Size();
-			GetCharacterMovement()->Velocity = FVector((Direction2D*Speed2D).X, (Direction2D * Speed2D).Y, currentVelocityZ);
+			GetCharacterMovement()->Velocity = FVector((Forward2D*Speed2D).X, (Forward2D * Speed2D).Y, currentVelocityZ);
 		}
 
 		//Acceleration
@@ -101,35 +98,23 @@ void AJonyWalk_5_7Character::Tick(float DeltaTime)
 			AddMovementInput(ForwardDirection, MovementVector.Y);
 		}
 
-		//Deceleration (Drag and Break)
-		CurrentVelocity = GetCharacterMovement()->Velocity;
-		float speedReduction = Drag + (MovementVector.Y < -0.5 ? Break : 0.0f);
-		CurrentVelocity -= CurrentVelocity.GetSafeNormal() * speedReduction * DeltaTime;
-		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToSize(0.0f, GetCharacterMovement()->MaxWalkSpeed);
-
 		//Slope
-		CurrentVelocity = GetCharacterMovement()->Velocity;
 		if (GetCharacterMovement()->IsMovingOnGround()) {
 			// Access the current floor result directly
 			FFindFloorResult CurrentFloor = GetCharacterMovement()->CurrentFloor;
 
 			// Get the surface normal (ground normal)
 			FVector GroundNormal = CurrentFloor.HitResult.ImpactNormal;
-			//Only apply if the slope is consistent. Missing some frames won't matter.
-			if (PreviousGroundNormal.Dot(GroundNormal) > 0.9f)
-			{
-				float InclineFraction = 1.0f - GetActorUpVector().Dot(GroundNormal);
-				FVector ProjectedForward = FVector::VectorPlaneProject(GetActorForwardVector(), GroundNormal);
 
-				//Apply partial gravity along projected forward
-				FVector GravityAlongSlope = FMath::Sign(ProjectedForward.Z) * ProjectedForward.GetSafeNormal() * GetCharacterMovement()->GetGravityZ() * InclineFraction * DeltaTime;
-				CurrentVelocity += GravityAlongSlope;
-				GetCharacterMovement()->Velocity = CurrentVelocity;
-				//TODO: Calculate backward vector on ground plane and apply dot product gravity along it. 
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GravityAlongSlope.ToString());
-			}
-			PreviousGroundNormal = GroundNormal;
+			//TODO: Calculate backward vector on ground plane and apply dot product gravity along it. 
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, CurrentFloor.HitResult.ImpactNormal.ToString());
 		}
+
+		//Deceleration (Drag and Break)
+		FVector currentVelocity = GetCharacterMovement()->Velocity;
+		float speedReduction = Drag + (MovementVector.Y < -0.5 ? Break : 0.0f);
+		currentVelocity -= currentVelocity.GetSafeNormal() * speedReduction * DeltaTime;
+		GetCharacterMovement()->Velocity = currentVelocity.GetClampedToSize(0.0f, GetCharacterMovement()->MaxWalkSpeed);
 
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GetCharacterMovement()->Velocity.ToString());
 		MovementVector = FVector2D::ZeroVector;

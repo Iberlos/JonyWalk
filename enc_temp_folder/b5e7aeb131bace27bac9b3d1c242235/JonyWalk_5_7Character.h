@@ -86,9 +86,8 @@ public:
 	virtual void DoJumpEnd();
 
 	FVector2D MovementVector = FVector2D::ZeroVector;
-	float Drag = 10.0f;
+	float Drag = 200.0f;
 	float Break = 600.0f;
-	FVector PreviousGroundNormal = FVector::ZeroVector;
 
 public:
 
