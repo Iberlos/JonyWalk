@@ -52,8 +52,8 @@ protected:
 public:
 
 	/** Constructor */
-	AJonyWalk_5_7Character();	
-
+	AJonyWalk_5_7Character();
+	virtual void Tick(float DeltaTime) override;
 protected:
 
 	/** Initialize input action bindings */
@@ -84,6 +84,10 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	FVector2D MovementVector = FVector2D::ZeroVector;
+	float Drag = 200.0f;
+	float Break = 600.0f;
 
 public:
 

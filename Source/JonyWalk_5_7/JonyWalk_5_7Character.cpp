@@ -59,13 +59,72 @@ void AJonyWalk_5_7Character::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	}
 }
 
+
+void AJonyWalk_5_7Character::Tick(float DeltaTime)
+{
+	if (GetController() != nullptr)
+	{
+		//Rotation
+		if (!GetCharacterMovement()->Velocity.IsNearlyZero() && MovementVector.X > 0.5 || MovementVector.X < -0.5)
+		{
+			FRotator CurrentRotation = GetActorRotation();
+			FRotator TargetRotation = (GetActorRightVector() * MovementVector.X).Rotation(); // Your target based on input
+
+			// Smoothly interpolate
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.0f);
+			SetActorRotation(NewRotation);
+
+			FVector2D Forward2D(GetActorForwardVector());
+			float currentVelocityZ = GetCharacterMovement()->Velocity.Z;
+			FVector2D Velocity2D(GetCharacterMovement()->Velocity);
+			float Speed2D = Velocity2D.Size();
+			GetCharacterMovement()->Velocity = FVector((Forward2D*Speed2D).X, (Forward2D * Speed2D).Y, currentVelocityZ);
+		}
+
+		//Acceleration
+		if (MovementVector.Y > 0.5)
+		{
+			// find out which way is forward
+			const FRotator Rotation = GetActorRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get forward vector
+			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+			// get right vector 
+			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+			// add movement
+			AddMovementInput(ForwardDirection, MovementVector.Y);
+		}
+
+		//Slope
+		if (GetCharacterMovement()->IsMovingOnGround()) {
+			// Access the current floor result directly
+			FFindFloorResult CurrentFloor = GetCharacterMovement()->CurrentFloor;
+
+			// Get the surface normal (ground normal)
+			FVector GroundNormal = CurrentFloor.HitResult.ImpactNormal;
+
+			//TODO: Calculate backward vector on ground plane and apply dot product gravity along it. 
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, CurrentFloor.HitResult.ImpactNormal.ToString());
+		}
+
+		//Deceleration (Drag and Break)
+		FVector currentVelocity = GetCharacterMovement()->Velocity;
+		float speedReduction = Drag + (MovementVector.Y < -0.5 ? Break : 0.0f);
+		currentVelocity -= currentVelocity.GetSafeNormal() * speedReduction * DeltaTime;
+		GetCharacterMovement()->Velocity = currentVelocity.GetClampedToSize(0.0f, GetCharacterMovement()->MaxWalkSpeed);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GetCharacterMovement()->Velocity.ToString());
+		MovementVector = FVector2D::ZeroVector;
+	}
+}
+
 void AJonyWalk_5_7Character::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	// route the input
-	DoMove(MovementVector.X, MovementVector.Y);
+	MovementVector = Value.Get<FVector2D>();
 }
 
 void AJonyWalk_5_7Character::Look(const FInputActionValue& Value)
@@ -79,22 +138,7 @@ void AJonyWalk_5_7Character::Look(const FInputActionValue& Value)
 
 void AJonyWalk_5_7Character::DoMove(float Right, float Forward)
 {
-	if (GetController() != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = GetController()->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, Forward);
-		AddMovementInput(RightDirection, Right);
-	}
 }
 
 void AJonyWalk_5_7Character::DoLook(float Yaw, float Pitch)

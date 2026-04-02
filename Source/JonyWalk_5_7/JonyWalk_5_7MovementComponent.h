@@ -14,6 +14,4 @@ class JONYWALK_5_7_API UJonyWalk_5_7MovementComponent : public UCharacterMovemen
 {
 	GENERATED_BODY()
 
-
-	
 };
