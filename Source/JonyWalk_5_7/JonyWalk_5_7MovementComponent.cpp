@@ -198,7 +198,6 @@ void UJonyWalk_5_7MovementComponent::DoSkatingMovement(float DeltaTime, FVector2
 
 		//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, Velocity.ToString());
 	}
-	UpdateComponentVelocity();
 	VelocityPriorToJumping = Velocity;
 }
 

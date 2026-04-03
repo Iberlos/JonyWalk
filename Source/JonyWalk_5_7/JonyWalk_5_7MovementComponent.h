@@ -37,6 +37,7 @@ class JONYWALK_5_7_API UJonyWalk_5_7MovementComponent : public UCharacterMovemen
 	EMovementMode OldMovementMode = MOVE_None;
 	FVector VelocityPriorToJumping = FVector::ZeroVector;
 	bool KeepVelocityAfterJumping = false;
+	FVector2D InputVector = FVector2D::ZeroVector;
 
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
 	void PhysSkating(float DeltaTime, int32 Iterations);

@@ -64,6 +64,16 @@ void AObstacle::BeginPlay()
     }
 }
 
+//Attempted Tick to fix overlap issue with brute force, but its no use.
+//    //Overlap issues work arround
+//TArray<AActor*> OverlappingActors;
+//TriggerBox->GetOverlappingActors(OverlappingActors, APawn::StaticClass());
+//
+//if (OverlappingActors.Num() > 0)
+//{
+//    HandleTriggered(OverlappingActors[0]);
+//}
+
 void AObstacle::OnTriggerOverlap(
     UPrimitiveComponent* OverlappedComponent,
     AActor* OtherActor,
