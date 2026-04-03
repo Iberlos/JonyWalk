@@ -11,18 +11,9 @@ void AJonyWalkHUD::DrawHUD()
     AJonyWalk_5_7GameState* GS = GetWorld()->GetGameState<AJonyWalk_5_7GameState>();
     if (!GS) return;
 
-    DrawText(
-        "USE TAB TO SWITCH MOVEMENT MODES",
-        FLinearColor::Yellow,
-        20.f,
-        20.f,
-        nullptr,
-        1.5f,
-        false
-    );
-
     // --- Top-left score ---
     FString ScoreText = GetScoreText();
+
     DrawText(
         ScoreText,
         FLinearColor::White,
