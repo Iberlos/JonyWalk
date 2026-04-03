@@ -20,10 +20,14 @@ class JONYWALK_5_7_API UJonyWalk_5_7MovementComponent : public UCharacterMovemen
 
 	ECustomMovementMode CustomMovementMode = CMOVE_Skating;
 	float MaxSkatingSpeed = 1200.0f;
+	float MaxSkatingAcceleration = 400.0f;
 	float Drag = 10.0f;
 	float Break = 2400.0f;
+
 	FVector PreviousGroundNormal = FVector::ZeroVector;
 	EMovementMode OldMovementMode = MOVE_None;
+	FVector VelocityPriorToJumping = FVector::ZeroVector;
+	bool KeepVelocityAfterJumping = false;
 
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
 	void PhysSkating(float DeltaTime, int32 Iterations);
