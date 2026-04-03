@@ -75,6 +75,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 public:
+	bool IsSkating();
 
 	void SwitchMovementMode();
 

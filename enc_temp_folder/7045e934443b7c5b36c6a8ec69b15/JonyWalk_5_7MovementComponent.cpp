@@ -16,6 +16,7 @@ UJonyWalk_5_7MovementComponent::UJonyWalk_5_7MovementComponent()
 	BrakingDecelerationWalking = 2000.f;
 	BrakingDecelerationFalling = 1500.0f;
 	MaxCustomMovementSpeed = MaxSkatingSpeed*2.0f;
+	MaxAcceleration = 2000.0f;
 }
 
 void UJonyWalk_5_7MovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
@@ -41,17 +42,18 @@ bool UJonyWalk_5_7MovementComponent::IsMovingOnGround() const
 
 void UJonyWalk_5_7MovementComponent::SetMovementMode(EMovementMode NewMovementMode, uint8 NewCustomMode)
 {
-	if (MovementMode == MOVE_Falling && (OldMovementMode == MOVE_Custom || OldMovementMode == MOVE_Custom)) NewMovementMode = MOVE_Custom;
+	if (MovementMode == MOVE_Falling && OldMovementMode == MOVE_Custom) NewMovementMode = MOVE_Custom;
 	if (MovementMode == MOVE_Walking || MovementMode == MOVE_Custom) OldMovementMode = MovementMode;
 	if (NewMovementMode == MOVE_Walking || NewMovementMode == MOVE_Custom) {
 		if (NewMovementMode == MOVE_Custom) {
 			bOrientRotationToMovement = false;
-			AirControl = 0.0f;
-			GroundFriction = 0.0f;
-			bImpartBaseVelocityX = true;
-			bImpartBaseVelocityY = true;
-			bImpartBaseVelocityZ = true;
-			bImpartBaseAngularVelocity = true;
+			AirControl = SkatingAirControl;
+			GroundFriction = SkatingGroundFriction;
+			MaxAcceleration = MaxSkatingAcceleration;
+			if (MovementMode == MOVE_Falling)
+			{
+				KeepVelocityAfterJumping = true;
+			}
 		}
 		else
 		{
@@ -63,10 +65,11 @@ void UJonyWalk_5_7MovementComponent::SetMovementMode(EMovementMode NewMovementMo
 			MinAnalogWalkSpeed = 20.f;
 			BrakingDecelerationWalking = 2000.f;
 			BrakingDecelerationFalling = 1500.0f;
+			MaxAcceleration = 2000.0f;
 		}
+		SetGroundMovementMode(NewMovementMode);
 	}
 	Super::SetMovementMode(NewMovementMode, NewCustomMode);
-	SetGroundMovementMode(NewMovementMode);
 }
 
 void UJonyWalk_5_7MovementComponent::DoMovement(float DeltaTime, FVector2D MovementVector)
@@ -74,6 +77,11 @@ void UJonyWalk_5_7MovementComponent::DoMovement(float DeltaTime, FVector2D Movem
 	switch (MovementMode) {
 	case MOVE_Walking: {
 		DoWalkingMovement(DeltaTime, MovementVector);
+		break;
+	}
+	case MOVE_Falling: {
+		//Keep velocity while on air.
+		Velocity = FVector(VelocityPriorToJumping.X, VelocityPriorToJumping.Y, Velocity.Z) ;
 		break;
 	}
 	default: {
@@ -111,12 +119,20 @@ void UJonyWalk_5_7MovementComponent::DoWalkingMovement(float deltaTime, FVector2
 		GetPawnOwner()->AddMovementInput(ForwardDirection, MovementVector.Y);
 		GetPawnOwner()->AddMovementInput(RightDirection, MovementVector.X);
 	}
+	VelocityPriorToJumping = Velocity;
 }
 
 void UJonyWalk_5_7MovementComponent::DoSkatingMovement(float DeltaTime, FVector2D MovementVector)
 {
 	if (GetController() != nullptr)
 	{
+		//Hard fix for a jump issue
+		if (KeepVelocityAfterJumping) 
+		{
+			Velocity = FVector(VelocityPriorToJumping.X, VelocityPriorToJumping.Y, 0.0f);
+			KeepVelocityAfterJumping = false;
+		}
+
 		FVector CurrentVelocity = Velocity;
 		//Rotation
 		if (!CurrentVelocity.IsNearlyZero() && MovementVector.X > 0.5 || MovementVector.X < -0.5)
@@ -183,8 +199,11 @@ void UJonyWalk_5_7MovementComponent::DoSkatingMovement(float DeltaTime, FVector2
 
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, Velocity.ToString());
 	}
+	VelocityPriorToJumping = Velocity;
 }
 
 void UJonyWalk_5_7MovementComponent::DoRailMovement(float deltaTime, FVector2D MovementVector)
 {
+	//TODO: Implement if time allows
+	VelocityPriorToJumping = Velocity;
 }

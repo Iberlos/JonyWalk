@@ -18,12 +18,21 @@ class JONYWALK_5_7_API UJonyWalk_5_7MovementComponent : public UCharacterMovemen
 
 	UJonyWalk_5_7MovementComponent();
 
-	ECustomMovementMode CustomMovementMode = CMOVE_Skating;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
 	float MaxSkatingSpeed = 1200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
 	float MaxSkatingAcceleration = 400.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
 	float Drag = 10.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
 	float Break = 2400.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
+	float SkatingAirControl = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Movement: Custom", meta = (AllowPrivateAccess = "true"))
 
+	float SkatingGroundFriction = 0.0f;
+
+	ECustomMovementMode CustomMovementMode = CMOVE_Skating;
 	FVector PreviousGroundNormal = FVector::ZeroVector;
 	EMovementMode OldMovementMode = MOVE_None;
 	FVector VelocityPriorToJumping = FVector::ZeroVector;

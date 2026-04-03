@@ -47,8 +47,8 @@ void UJonyWalk_5_7MovementComponent::SetMovementMode(EMovementMode NewMovementMo
 	if (NewMovementMode == MOVE_Walking || NewMovementMode == MOVE_Custom) {
 		if (NewMovementMode == MOVE_Custom) {
 			bOrientRotationToMovement = false;
-			AirControl = 0.0f;
-			GroundFriction = 0.0f;
+			AirControl = SkatingAirControl;
+			GroundFriction = SkatingGroundFriction;
 			MaxAcceleration = MaxSkatingAcceleration;
 			if (MovementMode == MOVE_Falling)
 			{
@@ -191,14 +191,14 @@ void UJonyWalk_5_7MovementComponent::DoSkatingMovement(float DeltaTime, FVector2
 				FVector GravityAlongSlope = FMath::Sign(ProjectedForward.Z) * ProjectedForward.GetSafeNormal() * GetGravityZ() * InclineFraction * DeltaTime;
 				CurrentVelocity += GravityAlongSlope;
 				Velocity = CurrentVelocity;
-				//TODO: Calculate backward vector on ground plane and apply dot product gravity along it. 
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GravityAlongSlope.ToString());
+				//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, GravityAlongSlope.ToString());
 			}
 			PreviousGroundNormal = GroundNormal;
 		}
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, Velocity.ToString());
+		//GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, Velocity.ToString());
 	}
+	UpdateComponentVelocity();
 	VelocityPriorToJumping = Velocity;
 }
 

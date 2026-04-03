@@ -88,6 +88,11 @@ void AJonyWalk_5_7Character::Move(float Right, float Forward)
 	MovementVector = FVector2D(Right, Forward);
 }
 
+bool AJonyWalk_5_7Character::IsSkating()
+{
+	return GetCharacterMovement()->MovementMode == MOVE_Custom;
+}
+
 void AJonyWalk_5_7Character::SwitchMovementMode()
 {
 	switch (GetCharacterMovement()->MovementMode)
